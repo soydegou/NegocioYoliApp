@@ -5,7 +5,7 @@ export default function App() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch('TU_URL_AQUI/exec')
+    fetch('https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec')
       .then(res => res.json())
       .then(json => setData(json.data))
       .catch(err => console.error(err));
