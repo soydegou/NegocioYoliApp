@@ -1,47 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ActivityIndicator, FlatList } from 'react-native';
 
-// Variable global para la caché (se mantiene viva mientras la app esté abierta)
-let cachedData = null;
-let lastFetchTime = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos en milisegundos
-
 export default function App() {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchData = async () => {
-    // 1. Verificación de Caché
-    const now = Date.now();
-    if (cachedData && (now - lastFetchTime < CACHE_DURATION)) {
-      setData(cachedData);
-      setLoading(false);
-      return;
-    }
-
-    // 2. Si no hay caché o expiró, hacemos la petición real
-    try {
-      setLoading(true);
-      const response = await fetch('https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec');
-      const json = await response.json();
-      
-      // Guardar en caché
-      cachedData = json;
-      lastFetchTime = Date.now();
-      
-      setData(json);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchData();
+    fetch('https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec')
+      .then((response) => response.json())
+      .then((json) => {
+        setData(json);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error al cargar:", error);
+        setLoading(false);
+      });
   }, []);
 
-  // 3. Renderizado de pantalla de carga
   if (loading) {
     return (
       <View style={styles.container}>
@@ -59,7 +35,10 @@ export default function App() {
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            <Text>{item.Producto}: {item.Cantidad}</Text>
+            {/* Aquí usamos los nombres exactos de tu CSV: PRODUCTO y STOCK ACTUAL */}
+            <Text style={styles.text}>
+              {item.PRODUCTO}: {item["STOCK ACTUAL"]}
+            </Text>
           </View>
         )}
       />
@@ -68,8 +47,9 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
-  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  container: { flex: 1, paddingTop: 50, alignItems: 'center', backgroundColor: '#fff' },
+  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
   loadingText: { marginTop: 10, fontSize: 16 },
-  item: { padding: 15, borderBottomWidth: 1, width: '100%' }
+  item: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#ccc', width: '90%' },
+  text: { fontSize: 18 }
 });
