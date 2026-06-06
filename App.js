@@ -29,7 +29,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Inventario YOLI</Text>
+      <Text style={styles.title}>Stock Real</Text>
       <FlatList
         data={data}
         keyExtractor={(_, index) => index.toString()}
