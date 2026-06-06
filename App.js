@@ -7,13 +7,13 @@ export default function App() {
 
   useEffect(() => {
     fetch('https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec')
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((json) => {
         setData(json);
         setLoading(false);
       })
-      .catch((error) => {
-        console.error("Error al cargar:", error);
+      .catch((err) => {
+        console.error(err);
         setLoading(false);
       });
   }, []);
@@ -22,34 +22,36 @@ export default function App() {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#0000ff" />
-        <Text style={styles.loadingText}>Cargando Inventario YOLI...</Text>
+        <Text>Cargando datos...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Inventario Actual</Text>
+      <Text style={styles.title}>Inventario YOLI</Text>
       <FlatList
         data={data}
-        keyExtractor={(item, index) => index.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.item}>
-            {/* Aquí usamos los nombres exactos de tu CSV: PRODUCTO y STOCK ACTUAL */}
-            <Text style={styles.text}>
-              {item.PRODUCTO}: {item["STOCK ACTUAL"]}
-            </Text>
-          </View>
-        )}
+        keyExtractor={(_, index) => index.toString()}
+        renderItem={({ item }) => {
+          // Extraemos los valores de forma genérica (sin nombres de columna)
+          const valores = Object.values(item);
+          return (
+            <View style={styles.item}>
+              <Text style={styles.text}>
+                {valores[0]}: {valores[1]}
+              </Text>
+            </View>
+          );
+        }}
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50, alignItems: 'center', backgroundColor: '#fff' },
-  title: { fontSize: 22, fontWeight: 'bold', marginBottom: 20 },
-  loadingText: { marginTop: 10, fontSize: 16 },
-  item: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#ccc', width: '90%' },
+  container: { flex: 1, paddingTop: 50, alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  item: { padding: 15, borderBottomWidth: 1, width: '90%' },
   text: { fontSize: 18 }
 });
