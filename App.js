@@ -12,7 +12,7 @@ export default function App() {
 
   useEffect(() => {
     // ⚠️ REEMPLAZA ESTO CON TU URL DE GOOGLE APPS SCRIPT
-    fetch('TU_URL_AQUI/exec')
+    fetch('https://script.google.com/macros/s/AKfycbxn4r4CY6WRdFJX2g0VASWMkky1ygRVGo82Zr3KbfdgxzXZ4Jtc2qSp2j9dklKFcfPP/exec')
       .then(res => res.json())
       .then(json => {
         if (json.status === 'success') {
