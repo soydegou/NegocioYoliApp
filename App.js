@@ -6,27 +6,22 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Asegúrate de que esta URL sea la correcta y esté publicada como "Cualquiera"
     fetch('https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec')
-      .then((response) => response.json())
+      .then((res) => res.json())
       .then((json) => {
-        setData(json);
+        // AQUÍ ESTÁ LA CORRECCIÓN: accedemos a json.data
+        if (json.status === 'success') {
+          setData(json.data);
+        }
         setLoading(false);
       })
-      .catch((error) => {
-        console.error("Error capturado:", error);
+      .catch((err) => {
+        console.error(err);
         setLoading(false);
       });
   }, []);
 
-  if (loading) {
-    return (
-      <View style={styles.container}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Cargando Stock...</Text>
-      </View>
-    );
-  }
+  if (loading) return <View style={styles.container}><ActivityIndicator size="large" /><Text>Cargando...</Text></View>;
 
   return (
     <View style={styles.container}>
@@ -36,10 +31,8 @@ export default function App() {
         keyExtractor={(_, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            {/* Usamos corchetes para acceder a nombres con espacios o mayúsculas */}
-            <Text style={styles.text}>
-              {item["PRODUCTO"]}: {item["STOCK ACTUAL"]}
-            </Text>
+            {/* Usamos las llaves exactamente como las escribiste en el Script: producto y cantidad */}
+            <Text style={styles.text}>{item.producto}: {item.cantidad}</Text>
           </View>
         )}
       />
@@ -48,8 +41,8 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 50, alignItems: 'center', backgroundColor: '#f9f9f9' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  item: { padding: 15, borderBottomWidth: 1, width: '90%', backgroundColor: '#fff' },
+  container: { flex: 1, paddingTop: 50, alignItems: 'center' },
+  title: { fontSize: 24, fontWeight: 'bold' },
+  item: { padding: 15, borderBottomWidth: 1, width: '90%' },
   text: { fontSize: 18 }
 });
