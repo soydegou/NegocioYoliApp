@@ -1,68 +1,65 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View, FlatList, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, ActivityIndicator, FlatList } from 'react-native';
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec';
+// Variable global para la caché (se mantiene viva mientras la app esté abierta)
+let cachedData = null;
+let lastFetchTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos en milisegundos
 
 export default function App() {
-  const [inventory, setInventory] = useState([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        // 🔥 TRUCO ANTI-CACHÉ: Obliga al celular a pedir datos frescos
-        const urlSinCache = `${API_URL}?t=${new Date().getTime()}`;
-        const response = await fetch(urlSinCache);
-        
-        const textoRespuesta = await response.text(); 
-        
-        try {
-          const data = JSON.parse(textoRespuesta);
-          if (data.status === 'success') {
-            setInventory(data.data);
-          } else {
-            console.log("Error de la API:", data.message);
-          }
-        } catch (parseError) {
-          console.log("🚨 GOOGLE NO ENVIÓ DATOS. Envió esto:", textoRespuesta.substring(0, 100) + "...");
-        }
+  const fetchData = async () => {
+    // 1. Verificación de Caché
+    const now = Date.now();
+    if (cachedData && (now - lastFetchTime < CACHE_DURATION)) {
+      setData(cachedData);
+      setLoading(false);
+      return;
+    }
 
-      } catch (error) {
-        console.log("🚨 ERROR DE RED:", error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadData();
+    // 2. Si no hay caché o expiró, hacemos la petición real
+    try {
+      setLoading(true);
+      const response = await fetch('https://script.google.com/macros/s/AKfycbxPK1zwG952lBOwFnBUE70QDPrnlZZqlmiaU8o51Mca98jSVgdJiHTOzpPTFs-09O-q/exec');
+      const json = await response.json();
+      
+      // Guardar en caché
+      cachedData = json;
+      lastFetchTime = Date.now();
+      
+      setData(json);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
+  // 3. Renderizado de pantalla de carga
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#2ecc71" />
-        <Text style={{marginTop: 10}}>Cargando inventario de YOLI...</Text>
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#0000ff" />
+        <Text style={styles.loadingText}>Cargando Inventario YOLI...</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>📦 STOCK ACTUAL YOLI</Text>
-      
-      {inventory.length === 0 && !loading && (
-        <Text style={{textAlign: 'center', marginTop: 20, color: 'red'}}>
-          No se pudieron cargar los datos. Revisa la terminal negra.
-        </Text>
-      )}
-
-      <FlatList 
-        data={inventory}
+      <Text style={styles.title}>Inventario Actual</Text>
+      <FlatList
+        data={data}
         keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <View style={styles.item}>
-            <Text style={styles.productName}>{item.producto}</Text>
-            <Text style={styles.stockText}>{item.cantidad}</Text>
+            <Text>{item.Producto}: {item.Cantidad}</Text>
           </View>
         )}
       />
@@ -71,21 +68,8 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingTop: 60, backgroundColor: '#f0f4f8', paddingHorizontal: 20 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20, textAlign: 'center', color: '#333' },
-  item: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    padding: 18, 
-    backgroundColor: 'white', 
-    marginBottom: 10, 
-    borderRadius: 10,
-    elevation: 2, 
-    shadowColor: '#000', 
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  productName: { fontSize: 16, color: '#333', flex: 1 },
-  stockText: { fontSize: 18, fontWeight: 'bold', color: '#2ecc71', minWidth: 40, textAlign: 'right' }
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
+  title: { fontSize: 20, fontWeight: 'bold', marginBottom: 20 },
+  loadingText: { marginTop: 10, fontSize: 16 },
+  item: { padding: 15, borderBottomWidth: 1, width: '100%' }
 });
